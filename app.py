@@ -52,6 +52,3 @@ def draw_bounding_boxes(img, text):
             (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
             img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
     return img
-
-if __name__ == '__main__':
-    app.run(debug=True)
