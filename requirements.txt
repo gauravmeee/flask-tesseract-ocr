@@ -1,5 +1,6 @@
 Flask==3.0.3
 Flask-Cors==4.0.1
-pytesseract==0.0.0
+pytesseract==0.3.13
 opencv-python==4.10.0.84
 numpy==2.1.0
+py
