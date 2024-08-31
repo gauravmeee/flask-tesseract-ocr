@@ -3,7 +3,6 @@ from flask_cors import CORS
 import pytesseract
 from pytesseract import Output
 import cv2
-import numpy as np
 import tempfile
 import os
 
