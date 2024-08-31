@@ -1,3 +1,4 @@
+// for deploying on vercel.json only
 {
     "version": 2,
     "builds": [
