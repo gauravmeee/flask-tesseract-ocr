@@ -21,11 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Set the environment variable to indicate that Flask is being run in the container
-ENV FLASK_APP=app.py
+# Expose the port on which the application will run
+EXPOSE 10000
 
-# Expose the port on which the Flask application will run
-EXPOSE 5000
-
-# Command to run the Flask application
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Command to run the application with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app"]
