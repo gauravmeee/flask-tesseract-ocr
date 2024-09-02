@@ -24,7 +24,7 @@ def upload_image():
     # Perform OCR processing using Tesseract and OpenCV
     image = cv2.imread(temp_filename)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract' # for deploying  on render purpose
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract' # for deploying  on render purpose
     text = pytesseract.image_to_string(gray)
     
     # Save the output image with bounding boxes
@@ -45,7 +45,7 @@ def serve_output_image():
     return send_file(output_filename, mimetype='image/jpeg')
 
 def draw_bounding_boxes(img, text):
-    # pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract' # for deploying on render.com 
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract' # for deploying on render.com 
     d = pytesseract.image_to_data(img, output_type=Output.DICT)
     n_boxes = len(d['text'])
     for i in range(n_boxes):
