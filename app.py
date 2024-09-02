@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import tempfile
 import subprocess
@@ -28,10 +29,25 @@ def index():
 def upload_image():
     try:
         # Debug information
-        logger.debug(f"Tesseract version: {subprocess.check_output(['tesseract', '--version']).decode()}")
-        logger.debug(f"Tesseract location: {subprocess.check_output(['which', 'tesseract']).decode()}")
-        logger.debug(f"TESSDATA_PREFIX: {os.environ.get('TESSDATA_PREFIX', 'Not set')}")
+        logger.debug(f"Python version: {sys.version}")
         logger.debug(f"Current working directory: {os.getcwd()}")
+        logger.debug(f"Contents of current directory: {os.listdir('.')}")
+        logger.debug(f"PATH: {os.environ.get('PATH')}")
+        logger.debug(f"TESSDATA_PREFIX: {os.environ.get('TESSDATA_PREFIX')}")
+        
+        try:
+            tesseract_version = subprocess.check_output(['tesseract', '--version'], stderr=subprocess.STDOUT).decode()
+            logger.debug(f"Tesseract version: {tesseract_version}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Error checking Tesseract version: {e.output.decode()}")
+        except FileNotFoundError:
+            logger.error("Tesseract not found in PATH")
+        
+        try:
+            tesseract_location = subprocess.check_output(['which', 'tesseract']).decode()
+            logger.debug(f"Tesseract location: {tesseract_location}")
+        except subprocess.CalledProcessError:
+            logger.error("Could not determine Tesseract location")
         
         if 'image' not in request.files:
             return jsonify({'error': 'No image file provided'}), 400
