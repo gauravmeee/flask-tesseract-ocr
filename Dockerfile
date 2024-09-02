@@ -10,6 +10,7 @@ RUN apt-get update && \
     libgl1-mesa-glx \
     libglib2.0-0 \
     tesseract-ocr \
+    libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file
