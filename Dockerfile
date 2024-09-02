@@ -25,5 +25,8 @@ COPY . .
 # Expose the port on which the application will run
 EXPOSE 10000
 
+# Set the Tesseract data path environment variable
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+
 # Command to run the application with Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app"]
