@@ -1,45 +1,80 @@
+import os
+import logging
+import tempfile
+import subprocess
 from flask import Flask, request, render_template, jsonify, send_file
 from flask_cors import CORS
 import pytesseract
 from pytesseract import Output
+from pytesseract.pytesseract import TesseractNotFoundError
 import cv2
-import tempfile
-import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Update the Tesseract command path
-pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
+# Ensure the output directory exists
+output_dir = os.path.join(os.getcwd(), 'output')
+os.makedirs(output_dir, exist_ok=True)
 
-# Route for the index page
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-# Route for uploading the image
 @app.route('/', methods=['POST'])
 def upload_image():
-    file = request.files['image']
-    temp_filename = os.path.join(tempfile.gettempdir(), file.filename)
-    file.save(temp_filename)
+    try:
+        # Debug information
+        logger.debug(f"Tesseract version: {subprocess.check_output(['tesseract', '--version']).decode()}")
+        logger.debug(f"Tesseract location: {subprocess.check_output(['which', 'tesseract']).decode()}")
+        logger.debug(f"TESSDATA_PREFIX: {os.environ.get('TESSDATA_PREFIX', 'Not set')}")
+        logger.debug(f"Current working directory: {os.getcwd()}")
+        
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Save the uploaded file temporarily
+            temp_filename = os.path.join(tempfile.gettempdir(), file.filename)
+            file.save(temp_filename)
+            
+            # Perform OCR processing
+            image = cv2.imread(temp_filename)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            text = pytesseract.image_to_string(gray)
+            
+            # Generate output image with bounding boxes
+            output_filename = os.path.join(output_dir, 'output.jpg')
+            output_image = draw_bounding_boxes(image, text)
+            cv2.imwrite(output_filename, output_image)
+            
+            # Clean up the temporary file
+            os.remove(temp_filename)
+            
+            return jsonify({
+                'text': text,
+                'image_url': '/output.jpg'
+            })
+        else:
+            return jsonify({'error': 'File type not allowed'}), 400
     
-    # Perform OCR processing using Tesseract and OpenCV
-    image = cv2.imread(temp_filename)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    text = pytesseract.image_to_string(gray)
-    
-    # Save the output image with bounding boxes
-    output_filename = os.path.join(os.getcwd(), 'output.jpg')
-    output_image = draw_bounding_boxes(image, text)
-    cv2.imwrite(output_filename, output_image)
-    
-    # Return JSON response with text and image URL
-    return jsonify({
-        'text': text,
-        'image_url': '/output.jpg'
-    })
+    except TesseractNotFoundError as e:
+        logger.error(f"Tesseract OCR not found: {str(e)}")
+        return jsonify({
+            'error': 'Tesseract OCR is not properly installed. Please contact support.'
+        }), 500
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        return jsonify({
+            'error': 'An unexpected error occurred. Please try again later.'
+        }), 500
 
 # Route for serving the output image
 @app.route('/output.jpg', methods=['GET'])

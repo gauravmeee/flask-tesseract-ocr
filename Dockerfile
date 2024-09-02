@@ -13,6 +13,11 @@ RUN apt-get update && \
     libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Verify Tesseract installation
+RUN tesseract --version && \
+    which tesseract && \
+    ls -l /usr/bin/tesseract
+
 # Copy the requirements file
 COPY requirements.txt ./
 
@@ -22,11 +27,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port on which the application will run
-EXPOSE 10000
-
 # Set the Tesseract data path environment variable
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+
+# Expose the port on which the application will run
+EXPOSE 10000
 
 # Command to run the application with Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app"]
